@@ -1,72 +1,90 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../providers/studentProviders/studentSnapshotProvider.dart';
-import '../../providers/studentProviders/timerCountDownProvider.dart';
-import 'PageView/pageViewContainer.dart';
+import '../../reusableWidgets/Responsive.dart';
+import '../../reusableWidgets/appBar.dart';
+import '../../reusableWidgets/createColor.dart';
+import '../../reusableWidgets/topBar/topBarFaculty.dart';
+import 'checkScoreList.dart';
 
-class StartQuiz extends StatefulWidget {
-  const StartQuiz({Key? key}) : super(key: key);
+class StudentResult extends StatefulWidget {
+  const StudentResult({Key? key}) : super(key: key);
 
   @override
-  State<StartQuiz> createState() => _StartQuizState();
+  State<StudentResult> createState() => _StudentResultState();
 }
 
-class _StartQuizState extends State<StartQuiz> {
-  final PageController _pagecontroller = PageController();
-
+class _StudentResultState extends State<StudentResult> {
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        //appBar: appBarSimpleWithoutBack(context, "Start Quiz"),
-        body: Consumer<SnapshotProvider>(
-          builder: (context, providerValue, child) {
-            return Container(
-              alignment: Alignment.topCenter,
-              child: StreamBuilder(
-                  stream: providerValue.firestoreSnapshots,
-                  builder: (context, snapshot) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        timer(),
-                        Expanded(
-                          child: PageView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            controller: _pagecontroller,
-                            itemCount: snapshot.data?.docs.length,
-                            itemBuilder: (context, index) {
-                              return pageViewContainer(
-                                  snapshot, index, _pagecontroller, context);
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-            );
-          },
-        ),
-      ),
-    );
-  }
+    var firestore = FirebaseFirestore.instance.collection("users").snapshots();
 
-  timer() {
-    return Consumer<TimerProvider>(
-      builder: (context, timerProvider, child) {
-        int mins = (timerProvider.timer / 60).toInt();
-        int sec = (timerProvider.timer % 60).toInt();
-        return Container(
-            margin: const EdgeInsets.only(top: 50),
-            child: Text(
-              timerProvider.timer > 0
-                  ? "${mins} min ${sec} sec left"
-                  : "Times Up",
-              style: TextStyle(fontSize: 30),
-            ));
-      },
-    );
+    return Scaffold(
+        appBar: ResponsiveWidget.isLargeScreen(context)
+            ? PreferredSize(
+            preferredSize: Size(screenWidth(context), 70),
+            child: const TopBarFaculty())
+            : appBarSimple(context, "Score"),
+
+        body: Center(
+          child: SizedBox(
+            child: Center(
+              child: StreamBuilder(
+                stream: firestore,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if ((snapshot.data?.docs.length).toString() == "null" ||
+                      (snapshot.data?.docs.length).toString() == "0") {
+                    return Container(
+                        alignment: Alignment.center,
+                        child: Text(
+                          "No Candidate to Display !",
+                          style: TextStyle(
+                              height: 1.5,
+                              fontSize: setSize(context, 24),
+                              fontWeight: FontWeight.bold,
+                              color: hexToColor("#263300"),
+                              overflow: TextOverflow.visible,
+                              wordSpacing: 2,
+                              letterSpacing: 0.4),
+                          textAlign: TextAlign.center,
+                        ));
+                  } else {
+                    final validData = snapshot.data?.docs
+                        .where((d) => d['userType'] == "0" && d['about'] != "" && d["qualification"] != "")
+                        .toList();
+                    return ResponsiveWidget.isSmallScreen(context)
+                        ? ListView.builder(
+                            itemCount: validData?.length,
+                            itemBuilder: (context, index) {
+                              return checkScoreList(validData, context, index);
+                            },
+                          )
+                        : Center(
+                            child: GridView.builder(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          ResponsiveWidget.isMediumScreen(
+                                                  context)
+                                              ? 2
+                                              : 3,
+                                      mainAxisExtent:
+                                          screenHeight(context) / 2),
+                              itemCount: validData?.length,
+                              itemBuilder: (context, index) {
+                                return checkScoreList(
+                                    validData, context, index);
+                              },
+                            ),
+                          );
+                  }
+                },
+              ),
+            ),
+          ),
+        ));
   }
 }

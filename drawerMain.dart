@@ -4,16 +4,18 @@ import '../../reusableWidgets/Responsive.dart';
 import '../../reusableWidgets/drawerHeading.dart';
 import 'drawerBody.dart';
 
-Drawer navigationDrawerStudent(context) {
+Drawer navigationDrawer(context) {
   return Drawer(
-    elevation: 20,
     width: screenWidth(context) / 1.6,
+    elevation: 20,
     child: SingleChildScrollView(
       child: Column(
         children: [
-          drawerHeader(context),
+          drawerHeader(context), // Inside Reusable Widgets Folder
+          // Inside drawerMain of navigationDrawer Folder
           listTileMyQuiz(context),
-          listTileCheckScore(context),
+          listTileCreate(context),
+          listTileStudentResult(context),
           listTileProfile(context),
           listTileAbout(context),
           listTilePrivacyPolicy(context),

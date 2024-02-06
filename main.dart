@@ -1,166 +1,60 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(MyApp());
+import 'Splash Screen/splashScreen.dart';
+import 'providers/RegisterPageProvider.dart';
+import 'providers/createQuizProvider.dart';
+import 'providers/loginPageProvider.dart';
+import 'providers/studentProviders/startQuizProvider.dart';
+import 'providers/studentProviders/studentProvider.dart';
+import 'providers/studentProviders/studentSnapshotProvider.dart';
+import 'providers/studentProviders/timerCountDownProvider.dart';
+import 'reusableWidgets/profileSection/provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  /*if (kIsWeb) {
+    await Firebase.initializeApp(
+        options: const FirebaseOptions(
+            apiKey: "AIzaSyC9eJ9frWsX3ntu57LTUMoc7a0RXG7Xjqg",
+            authDomain: "project-41bc9.firebaseapp.com",
+            projectId: "project-41bc9",
+            storageBucket: "project-41bc9.appspot.com",
+            messagingSenderId: "575325391913",
+            appId: "1:575325391913:web:2dbaee145ef2b25553a038",
+            measurementId: "G-2E1W6WMJWZ"));
+  }*/
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'QuizX',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Login(),
-    );
-  }
-}
-
-class User {
-  String displayName;
-  String uid;
-
-  User({required this.displayName, required this.uid});
-}
-
-class Login extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<void> _signInAnonymously(BuildContext context) async {
-    try {
-      UserCredential userCredential = await _auth.signInAnonymously();
-      User? user = userCredential.user;
-      if (user != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => QuizScreen(user: user),
-          ),
-        );
-      }
-    } catch (e) {
-      print('Error signing in: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login to QuizX'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => _signInAnonymously(context),
-              child: Text('Login Anonymously'),
-            ),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => RegisterPageProvider()),
+        ChangeNotifierProvider(create: (_) => LoginPageProvider()),
+        ChangeNotifierProvider(create: (_) => CreateQuizProvider()),
+        ChangeNotifierProvider(create: (_) => StudentProvider()),
+        ChangeNotifierProvider(create: (_) => ProfilePageProvider()),
+        ChangeNotifierProvider(create: (_) => StartQuizProvider()),
+        ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => SnapshotProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'QuizX',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
-      ),
-    );
-  }
-}
-
-class QuizScreen extends StatelessWidget {
-  final User user;
-
-  QuizScreen({required this.user});
-
-  // Add your quiz logic here
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('QuizX - ${user.displayName}'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Implement your quiz questions and answer buttons here
-
-            ElevatedButton(
-              onPressed: () {
-                // Check the answer and update score
-              },
-              child: Text('Submit Answer'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class Scoreboard extends StatelessWidget {
-  final int score;
-  final int highScore;
-
-  Scoreboard({required this.score, required this.highScore});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Scoreboard'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Score: $score'),
-            Text('High Score: $highScore'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ChatScreen extends StatelessWidget {
-  // Implement chat screen UI and logic here
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Implement chat messages and input field here
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class NotificationScreen extends StatelessWidget {
-  // Implement notification screen UI and logic here
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Notifications'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Implement notification messages here
-          ],
-        ),
+        home: const SplashScreen(),
       ),
     );
   }
